@@ -1,6 +1,12 @@
 # thought process
 thought_process.md
 
+# csv files
+*.csv
+
+# jupyter notebooks
+*.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
