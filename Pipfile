@@ -9,6 +9,8 @@ pandas = "*"
 matplotlib = "*"
 seaborn = "*"
 ipykernel = "*"
+requests = "*"
+gdown = "*"
 
 [dev-packages]
 
