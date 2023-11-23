@@ -5,3 +5,10 @@ The goal of this technical test is to build a data pipeline that performs the fo
 2. Calibrate a Beer-Lambert model to find the pigment concentration from absorbance data.
 3. Collect absorbance data from 1. to calculate pigment concentrations for each data record using the model in 2.
 4. Load the results into a structured dtabase and/or provide plots.
+
+# Setup
+1. clone the git repo
+```
+git clone https://github.com/EcoFiendly/colorifix_test.git
+cd colorifix_test
+```
