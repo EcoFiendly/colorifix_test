@@ -17,3 +17,11 @@ cd colorifix_test
 ```
 API_TOKEN = your token here
 ```
+
+# Background
+Beer-Lambert equation can be used to determine the relationship between absorbance (A) and concentration (c):
+```
+A = E c l
+```
+E is the absorptivity coefficient and l is optical path length in cm.
+Assume when measuring multiple chemicals their absorbances can be added such that for N chemicals, A is the sum of absorbance of each of the chemicals. When measuring a sample in the spectrophotometer (chemical in a solvent), we also measure the solvent only (i.e. no pigment) and call this a Blank.
