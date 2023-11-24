@@ -25,3 +25,14 @@ A = E c l
 ```
 E is the absorptivity coefficient and l is optical path length in cm.
 Assume when measuring multiple chemicals their absorbances can be added such that for N chemicals, A is the sum of absorbance of each of the chemicals. When measuring a sample in the spectrophotometer (chemical in a solvent), we also measure the solvent only (i.e. no pigment) and call this a Blank.
+
+# Thought process
+1. for calibration data:
+    1. since A = E c l and l = 1cm, equation can be written as A = E c
+    2. using the calibration data, and having A and c, equation can be rewritten as E = A/c
+    3. to obtain A(pigment), I need to first subtract A(blank) from A(total)
+    3. plug in A(pigment) and c from calibration data and get E
+2. Taking the E from calibration and calculating concentration for each of the samples:
+    1. we now need to find c, equation can be rewritten as c = A/E
+    2. once again need to subtract A(blank) from A(total)
+    3. plug in A(pigment) and E to get c
