@@ -4,7 +4,14 @@ import requests
 import datetime
 import gdown
 
-def download_data(token, db_id):
+def download_data(token: str, db_id: str) -> None:
+    """
+    Gets the table from a database through the notion API
+    Parses the json for the relevant information and download url for the files
+    Downloads the files and write to csvs
+    token: api token
+    db_id: id of the database
+    """
     # Headers
     headers = {
         "Authorization": "Bearer " + token,

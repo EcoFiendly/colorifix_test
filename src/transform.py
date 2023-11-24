@@ -2,7 +2,12 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 
-def calibrate_beer_lambert(df, name):
+def calibrate_beer_lambert(df: pd.DataFrame, name: str) -> pd.DataFrame:
+    """
+    Calibrate a beer lambert curve using calibration data provided
+    df: calibration dataframe
+    name: name of dataframe
+    """
     # melt from wide to long
     df = pd.melt(df, id_vars=["Sample", "Dilution"], value_vars=df.columns[3:], var_name="Wavelength", value_name="Total_absorbance")
 
@@ -52,7 +57,11 @@ def calibrate_beer_lambert(df, name):
 
     return out
 
-def estimate_epsilon(df):
+def estimate_epsilon(df: pd.DataFrame) -> float:
+    """
+    Estimates the value of epsilon using calibration data
+    df: calibration dataframe
+    """
     # groupby concentration 
     df = df.groupby("Concentration")["Corrected_absorbance"].mean().reset_index()
     # calculate epsilon
@@ -61,7 +70,13 @@ def estimate_epsilon(df):
     # use final point and 0, 0 to calculate gradient/epsilon via formula (y2-y1)/(x2-x1)
     return df["epsilon"].values[-1]
 
-def calculate_concentration(df, df_blank, epsilon):
+def calculate_concentration(df: pd.DataFrame, df_blank: pd.DataFrame, epsilon:float) -> pd.DataFrame:
+    """
+    Calculate the concentration of each of the samples that were measured
+    df: dataframe of the sample measurements
+    df_blank: dataframe of the corresponding blank measurements
+    epsilon: epsilon value obtained from calibration
+    """
     # melt from wide to long
     df = pd.melt(df, id_vars=["Sample", "Dilution"], value_vars=df.columns[2:], var_name="Wavelength", value_name="Total_absorbance")
 
