@@ -44,8 +44,10 @@ def calibrate_beer_lambert(df, name):
     # save zoomed in plot
     g2.figure.savefig(f"results/wavelength_absorbance_zoom_{name}.png")
 
+    # calculate concentration
     out["Concentration"] = 50/out["Dilution"]
 
+    # calculate epsilon
     out["Epsilon"] = out["Corrected_absorbance"]/out["Concentration"]
 
     return out
