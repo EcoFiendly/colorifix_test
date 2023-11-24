@@ -1,8 +1,11 @@
-# thought process
-thought_process.md
-
 # csv files
 *.csv
+
+# whitelist calibration.csv
+!data/calibration.csv
+
+# png files
+*.png
 
 # jupyter notebooks
 *.ipynb
