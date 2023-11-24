@@ -51,3 +51,40 @@ def calibrate_beer_lambert(df, name):
     out["Epsilon"] = out["Corrected_absorbance"]/out["Concentration"]
 
     return out
+
+def estimate_epsilon(df):
+    # groupby concentration 
+    df = df.groupby("Concentration")["Corrected_absorbance"].mean().reset_index()
+    # calculate epsilon
+    df["epsilon"] = df["Corrected_absorbance"]/df["Concentration"]
+    # take final value, epsilon is gradient, making assumption that line cuts through 0,0
+    # use final point and 0, 0 to calculate gradient/epsilon via formula (y2-y1)/(x2-x1)
+    return df["epsilon"].values[-1]
+
+def calculate_concentration(df, df_blank, epsilon):
+    # melt from wide to long
+    df = pd.melt(df, id_vars=["Sample", "Dilution"], value_vars=df.columns[2:], var_name="Wavelength", value_name="Total_absorbance")
+
+    # melt from wide to long
+    df_blank = pd.melt(df_blank, id_vars=["Sample", "Dilution"], value_vars=df_blank.columns[2:], var_name="Wavelength", value_name="Total_absorbance")
+
+    # calculate mean of total absorbance and error
+    df_calc = df.groupby(["Dilution", "Wavelength"])["Total_absorbance"].mean().reset_index()
+
+    df_calc.rename(columns={"Total_absorbance":"Mean_absorbance"}, inplace=True)
+
+    # calculate mean of blank absorbance and error
+    blank_calc = df_blank.groupby(["Dilution", "Wavelength"])["Total_absorbance"].mean().reset_index()
+
+    blank_calc.rename(columns={"Total_absorbance":"Mean_abs_blank"}, inplace=True)
+    
+    # merge sample and blank tables
+    out = pd.merge(df_calc, blank_calc[["Wavelength", "Mean_abs_blank"]], on="Wavelength")
+
+    # calculate corrected absorbance and error
+    out["Corrected_absorbance"] = out["Mean_absorbance"] - out["Mean_abs_blank"]
+
+    # calculate concentration
+    out["Concentration"] = out["Corrected_absorbance"] / epsilon
+    
+    return out
