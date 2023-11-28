@@ -2,60 +2,81 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 
-def calibrate_beer_lambert(df: pd.DataFrame, name: str) -> pd.DataFrame:
+def melt_data(df):
+    """
+    Melt data from wide to long
+    df: DataFrame
+    """
+    return pd.melt(df, id_vars=["Sample", "Dilution"], value_vars=df.columns[2:], var_name="Wavelength", value_name="Total_absorbance")
+
+def calculate_mean_absorbance(df, name: str):
+    """
+    calculate mean of total absorbance and error
+    """
+    group = df.groupby(["Dilution", "Wavelength"])["Total_absorbance"].mean().reset_index()
+    group.rename(columns={"Total_absorbance":"Mean_absorbance"}, inplace=True)
+    group[f"Abs_error_{name}"] = (df.groupby(["Dilution", "Wavelength"])["Total_absorbance"].std()/np.sqrt(3)).reset_index()["Total_absorbance"]
+    
+    return group
+
+def calculate_epsilon(df):
+    # calculate epsilon
+    df["Epsilon"] = df["Corrected_absorbance"]/df["Concentration"]
+    return df
+
+def calibrate_beer_lambert(df: pd.DataFrame, ) -> pd.DataFrame:
     """
     Calibrate a beer lambert curve using calibration data provided
     df: calibration dataframe
     name: name of dataframe
     """
-    # melt from wide to long
-    df = pd.melt(df, id_vars=["Sample", "Dilution"], value_vars=df.columns[3:], var_name="Wavelength", value_name="Total_absorbance")
+    df = melt_data(df)
 
     # filter for S1 samples
-    cal_sample = df.loc[df["Sample"]=="S1"]
+    sample = df.loc[df["Sample"]=="S1"]
 
     # calculate mean of total absorbance and error
-    cal_sample_calc = cal_sample.groupby(["Dilution", "Wavelength"])["Total_absorbance"].mean().reset_index()
-    cal_sample_calc.rename(columns={"Total_absorbance":"Mean_absorbance"}, inplace=True)
+    grouped_sample = calculate_mean_absorbance(sample, "sample")
 
     # filter for blank samples
-    cal_blank = df.loc[df["Sample"]=="Blank"]
+    blank = df.loc[df["Sample"]=="Blank"]
 
     # calculate mean of blank absorbance and error
-    cal_blank_calc = cal_blank.groupby(["Dilution", "Wavelength"])["Total_absorbance"].mean().reset_index()
-    cal_blank_calc.rename(columns={"Total_absorbance":"Mean_abs_blank"}, inplace=True)
+    grouped_blank = calculate_mean_absorbance(blank, "blank")
 
     # merge sample and blank tables
-    out = pd.merge(cal_sample_calc, cal_blank_calc[["Wavelength", "Mean_abs_blank"]], on="Wavelength")
+    out = pd.merge(grouped_sample, grouped_blank[["Wavelength", "Mean_abs_blank"]], on="Wavelength")
 
     # calculate corrected absorbance and error
     out["Corrected_absorbance"] = out["Mean_absorbance"] - out["Mean_abs_blank"]
+    out["Corrected_error"] = out["Abs_error_sample"] + out["Abs_error_blank"]
 
+    # calculate concentration
+    out = 50/out["Dilution"]
+
+    # calculate epsilon
+    out = calculate_epsilon(out)
+
+    return out
+
+def plot_abs_wavelength(df, name: str):
     # convert wavelength dtype to int
-    out.Wavelength = out.Wavelength.astype(float).astype(int)
+    df.Wavelength = df.Wavelength.astype(float).astype(int)
 
     # plot wavelength against corrected_absorbance
-    g1 = sns.lineplot(out, x="Wavelength", y="Corrected_absorbance", hue="Dilution")
+    g1 = sns.lineplot(df, x="Wavelength", y="Corrected_absorbance", hue="Dilution")
 
     # save figure to results directory
-    g1.figure.savefig(f"results/wavelength_absorbance_{name}.png")
+    # g1.figure.savefig(f"results/wavelength_absorbance_{name}.png")
 
     # zoom in on wavelength against corrected_absorbance
-    g2 = sns.lineplot(out, x="Wavelength", y="Corrected_absorbance", hue="Dilution",)
+    g2 = sns.lineplot(df, x="Wavelength", y="Corrected_absorbance", hue="Dilution",)
     g2.set(
         xlim=(400, 600)
     )
 
     # save zoomed in plot
-    g2.figure.savefig(f"results/wavelength_absorbance_zoom_{name}.png")
-
-    # calculate concentration
-    out["Concentration"] = 50/out["Dilution"]
-
-    # calculate epsilon
-    out["Epsilon"] = out["Corrected_absorbance"]/out["Concentration"]
-
-    return out
+    # g2.figure.savefig(f"results/wavelength_absorbance_zoom_{name}.png")
 
 def estimate_epsilon(df: pd.DataFrame) -> float:
     """
@@ -70,7 +91,7 @@ def estimate_epsilon(df: pd.DataFrame) -> float:
     # use final point and 0, 0 to calculate gradient/epsilon via formula (y2-y1)/(x2-x1)
     return df["epsilon"].values[-1]
 
-def calculate_concentration(df: pd.DataFrame, df_blank: pd.DataFrame, epsilon:float) -> pd.DataFrame:
+def calculate_concentration(sample: pd.DataFrame, blank: pd.DataFrame, epsilon:float) -> pd.DataFrame:
     """
     Calculate the concentration of each of the samples that were measured
     df: dataframe of the sample measurements
@@ -78,26 +99,23 @@ def calculate_concentration(df: pd.DataFrame, df_blank: pd.DataFrame, epsilon:fl
     epsilon: epsilon value obtained from calibration
     """
     # melt from wide to long
-    df = pd.melt(df, id_vars=["Sample", "Dilution"], value_vars=df.columns[2:], var_name="Wavelength", value_name="Total_absorbance")
+    sample = melt_data(sample)
 
     # melt from wide to long
-    df_blank = pd.melt(df_blank, id_vars=["Sample", "Dilution"], value_vars=df_blank.columns[2:], var_name="Wavelength", value_name="Total_absorbance")
+    blank = melt_data(blank)
 
     # calculate mean of total absorbance and error
-    df_calc = df.groupby(["Dilution", "Wavelength"])["Total_absorbance"].mean().reset_index()
-
-    df_calc.rename(columns={"Total_absorbance":"Mean_absorbance"}, inplace=True)
+    grouped_sample = calculate_mean_absorbance(sample, "sample")
 
     # calculate mean of blank absorbance and error
-    blank_calc = df_blank.groupby(["Dilution", "Wavelength"])["Total_absorbance"].mean().reset_index()
-
-    blank_calc.rename(columns={"Total_absorbance":"Mean_abs_blank"}, inplace=True)
+    grouped_blank = calculate_mean_absorbance(blank, "blank")
     
     # merge sample and blank tables
-    out = pd.merge(df_calc, blank_calc[["Wavelength", "Mean_abs_blank"]], on="Wavelength")
+    out = pd.merge(grouped_sample, grouped_blank[["Wavelength", "Mean_abs_blank"]], on="Wavelength")
 
     # calculate corrected absorbance and error
     out["Corrected_absorbance"] = out["Mean_absorbance"] - out["Mean_abs_blank"]
+    out["Corrected_error"] = out["Abs_error_sample"] + out["Abs_error_blank"]
 
     # calculate concentration
     out["Concentration"] = out["Corrected_absorbance"] / epsilon
