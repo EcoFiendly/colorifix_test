@@ -12,6 +12,7 @@ ipykernel = "*"
 requests = "*"
 gdown = "*"
 python-dotenv = "*"
+pytest = "*"
 
 [dev-packages]
 
