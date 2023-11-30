@@ -49,6 +49,11 @@ Assume when measuring multiple chemicals their absorbances can be added such tha
     2. once again need to subtract A(blank) from A(total)
     3. plug in A(pigment) and E to get c
 
+# Data model
+![Alt text](dye_data_model.svg)
+
+Data model of dye samples.
+
 # If I had more time
 1. I think I might not have grasped the concept fully, specifically this part in the instruction: "Absorbance is a function of wavelength. When calibrating the Lambert-Beer model, work with a single wavelength instead of considering the whole range. Make sure to justify your decision."// I went for a generalised approach to begin with, and used mean for my calculations.
 2. I also did not include std errors when doing my calculations (which I remember from class is important).
