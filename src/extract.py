@@ -22,6 +22,11 @@ def download_data(token: str, db_id: str) -> None:
     # Query the notion database
     url = f'https://api.notion.com/v1/databases/{db_id}/query'
     r = requests.post(url, headers=headers)
+    try:
+        r.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f"Error: {e}")
+
     data = r.json()
 
     # Download files from gdrive and name accordingly, write to data/
