@@ -12,6 +12,8 @@ def melt_data(df):
 def calculate_mean_absorbance(df, name: str):
     """
     calculate mean of total absorbance and error
+    df: DataFrame
+    name: sample or blank
     """
     group = df.groupby(["Dilution", "Wavelength"])["Total_absorbance"].mean().reset_index()
     group.rename(columns={"Total_absorbance":"Mean_absorbance"}, inplace=True)
@@ -20,6 +22,10 @@ def calculate_mean_absorbance(df, name: str):
     return group
 
 def calculate_epsilon(df):
+    """
+    Calculate epsilon for calibration data
+    df: Callibration DataFrame
+    """
     # calculate epsilon
     df["Epsilon"] = df["Corrected_absorbance"]/df["Concentration"]
     return df
