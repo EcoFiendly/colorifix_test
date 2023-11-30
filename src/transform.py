@@ -92,10 +92,10 @@ def estimate_epsilon(df: pd.DataFrame) -> float:
     # groupby concentration 
     df = df.groupby("Concentration")["Corrected_absorbance"].mean().reset_index()
     # calculate epsilon
-    df["epsilon"] = df["Corrected_absorbance"]/df["Concentration"]
+    df = calculate_epsilon(df)
     # take final value, epsilon is gradient, making assumption that line cuts through 0,0
     # use final point and 0, 0 to calculate gradient/epsilon via formula (y2-y1)/(x2-x1)
-    return df["epsilon"].values[-1]
+    return df["Epsilon"].values[-1]
 
 def calculate_concentration(sample: pd.DataFrame, blank: pd.DataFrame, epsilon:float) -> pd.DataFrame:
     """
